@@ -1,0 +1,51 @@
+function [overalltime,red ] = Cal_iterposreduct( data,parameter,threshold)
+// Such function is FSPA stategy
+overall_time_start=tic;
+
+// Calculate the vaule of approximation quality
+[m,n]=size(data);
+[ relation ] = Cal_condition( data(:,1:end-1),parameter );
+[decisionclass] = Cal_decision(data(:,end));
+[tmptmpLow] = Cal_low(relation,decisionclass);
+rawpos=sum(max(tmptmpLow))/m;
+
+// Initialize variable
+Low = zeros(1,m);
+red=zeros(1,n-1);
+k=1;
+tmppos=-1000;
+
+// Add attributes
+while k<=n-1
+    if tmppos>=threshold*rawpos
+        break
+    else
+        tmpSig=-9000.*ones(1,n-1);
+       // Evaluate each candidate attribute by gradually reducing the volume of samples
+        [decisionclass1] = Cal_decision(data(Low==0,end));
+        for j=1:n-1
+            if red(1,j)==0
+                red(1,j)=1;
+                tmpdata = data(Low==0,red==1);
+                [ relation ] = Cal_condition( tmpdata,parameter);
+                [tmpLow] = Cal_low(relation,decisionclass1);
+               % tmpSig(1,j)=sum(max(tmpLow))/m;
+                tmpSig(1, j)=(sum(max(tmpLow))+sum(Low))/m;
+                red(1,j)=0;
+            end
+        end
+        // Select one qualified attribute, and then add attribute into reduct.
+        [~,x]=max(tmpSig);
+        red(1,x)=1;
+        k=k+1;
+        tmpdata=data(:,red==1);
+        [ irrelation ] = Cal_condition( tmpdata,parameter);
+        clear tmpdata
+        [tmpLow] = Cal_low(irrelation,decisionclass);
+        tmppos=sum(max(tmpLow))/m;
+        Low = max(tmpLow);
+    end
+end
+overalltime=toc(overall_time_start);
+end
+

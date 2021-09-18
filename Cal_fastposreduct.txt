@@ -1,0 +1,49 @@
+function [overalltime,red ] = Cal_fastposreduct( data,parameter,threshold)
+// Such function is FPRC strategy
+overall_time_start=tic;
+
+// Calculate the vaule of approximation quality
+[m,n]=size(data);
+[decisionclass] = Cal_decision(data(:,end));
+[ relation ] = Cal_fastcondition( data(:,1:end-1),parameter );
+[Low] = Cal_low(relation,decisionclass);
+rawpos=sum(max(Low))/m;
+
+// Initialize variable
+red=zeros(1,n-1);
+k=1;
+tmppos=-1000;
+
+// Add attributes
+while k<=n-1
+    if tmppos>=threshold*rawpos
+        break
+    else
+    tmpSig=-9000.*ones(1,n-1);
+// Evaluate each candidate attribute
+    for j=1:n-1 
+        if  red(1,j)==0
+            red(1,j)=1;
+            tmpdata=data(:,red==1);           
+            [ relation ] = Cal_fastcondition( tmpdata,parameter );
+            clear tmpdata
+            [Low] = Cal_low(relation,decisionclass);
+            tmpSig(1,j)=sum(max(Low))/m;
+            red(1,j)=0;
+        end  
+    end
+    // Select one qualified attribute, and then add attribute into reduct.
+        [~,x]=max(tmpSig);
+        red(1,x)=1;
+        k=k+1;  
+        tmpdata=data(:,red==1);           
+        [ relation ] = Cal_fastcondition( tmpdata,parameter );
+        clear tmpdata
+        [Low] = Cal_low(relation,decisionclass);
+        tmppos=sum(max(Low))/m;
+    end
+end
+overalltime=toc(overall_time_start);
+
+end
+

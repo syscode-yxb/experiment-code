@@ -1,0 +1,12 @@
+function [Low] = Cal_low(Fuzzymatrix,Decisionclass)
+// This function is used to claculate the lower approximation
+[D,~]=size(Decisionclass);
+for d=1:D  
+
+         tmp=bsxfun(@min,Fuzzymatrix,Decisionclass(d,:));%min(Fuzzymatrix,repmat(Decisionclass(d,:),n,1));
+         
+         Low(d,:)=(sum(tmp,2)==sum(Fuzzymatrix,2))';
+         
+end
+end
+
